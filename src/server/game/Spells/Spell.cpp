@@ -5362,7 +5362,7 @@ SpellCastResult Spell::CheckCast(bool strict)
                 {
                     case SUMMON_CATEGORY_PET:
                         if (m_caster->GetPetGUID())
-                            if (m_caster->GetGuardianPet()->isAlive())
+                            if (m_caster->GetGuardianPet()->IsAlive())
                                 return SPELL_FAILED_ALREADY_HAVE_SUMMON;
                             else
                             {
