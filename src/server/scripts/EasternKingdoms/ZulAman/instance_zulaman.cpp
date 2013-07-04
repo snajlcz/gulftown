@@ -1,5 +1,15 @@
+<<<<<<< HEAD
 /*
  * Copyright (C) 2008-2013 TrinityCore <http://www.trinitycore.org/>
+=======
+ /*
+ *
+ * Copyright (C) 2011-2013 ArkCORE <http://www.arkania.net/>
+ *
+ * Copyright (C) 2008-2013 TrinityCore <http://www.trinitycore.org/>
+ *
+ * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+>>>>>>> 7c6fcf96316490f3ed20d451f8f79d83121678d1
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the

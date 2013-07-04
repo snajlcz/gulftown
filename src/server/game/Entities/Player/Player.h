@@ -1,5 +1,9 @@
 /*
+ *
+ * Copyright (C) 2011-2013 ArkCORE <http://www.arkania.net/>
+ *
  * Copyright (C) 2008-2013 TrinityCore <http://www.trinitycore.org/>
+ *
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -1145,7 +1149,7 @@ private:
 
     void _RewardHonor(Player* player);
     void _RewardXP(Player* player, float rate);
-    void _RewardReputation(Player* player, float rate);
+    void _RewardOnKill(Player* player, float rate);
     void _RewardKillCredit(Player* player);
     void _RewardPlayer(Player* player, bool isDungeon);
     void _RewardGroup();
@@ -2115,7 +2119,7 @@ class Player : public Unit, public GridObject<Player>
         ReputationMgr&       GetReputationMgr()       { return *m_reputationMgr; }
         ReputationMgr const& GetReputationMgr() const { return *m_reputationMgr; }
         ReputationRank GetReputationRank(uint32 faction_id) const;
-        void RewardReputation(Unit* victim, float rate);
+        void RewardOnKill(Unit *victim, float rate);
         void RewardReputation(Quest const* quest);
 
         int32 CalculateReputationGain(ReputationSource source, uint32 creatureOrQuestLevel, int32 rep, int32 faction, bool noQuestBonus = false);
@@ -2488,7 +2492,8 @@ class Player : public Unit, public GridObject<Player>
         bool CanSeeSpellClickOn(Creature const* creature) const;
 
         uint32 GetChampioningFaction() const { return m_ChampioningFaction; }
-        void SetChampioningFaction(uint32 faction) { m_ChampioningFaction = faction; }
+		uint32 GetChampioningFactionDungeonLevel() const { return m_ChampioningFactionDungeonLevel;}
+		void SetChampioningFaction(uint32 faction, uint32 dungeonLevel = 0) { m_ChampioningFaction = faction; m_ChampioningFactionDungeonLevel = dungeonLevel; }
         Spell* m_spellModTakingSpell;
 
         float GetAverageItemLevel();
@@ -2862,6 +2867,7 @@ class Player : public Unit, public GridObject<Player>
         SpellCooldowns m_spellCooldowns;
 
         uint32 m_ChampioningFaction;
+		uint32 m_ChampioningFactionDungeonLevel;
 
         std::queue<uint32> m_timeSyncQueue;
         uint32 m_timeSyncTimer;

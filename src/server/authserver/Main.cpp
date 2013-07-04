@@ -1,5 +1,9 @@
 /*
+ *
+ * Copyright (C) 2011-2013 ArkCORE <http://www.arkania.net/>
+ *
  * Copyright (C) 2008-2013 TrinityCore <http://www.trinitycore.org/>
+ *
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -102,6 +106,7 @@ extern int main(int argc, char **argv)
         printf("Verify that the file exists and has \'[authserver]\' written in the top of the file!\n");
         return 1;
     }
+
 
     TC_LOG_INFO(LOG_FILTER_AUTHSERVER, "%s (authserver)", _FULLVERSION);
     TC_LOG_INFO(LOG_FILTER_AUTHSERVER, "<Ctrl-C> to stop.\n");

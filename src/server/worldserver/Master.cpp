@@ -1,5 +1,9 @@
 /*
+ *
+ * Copyright (C) 2011-2013 ArkCORE <http://www.arkania.net/>
+ *
  * Copyright (C) 2008-2013 TrinityCore <http://www.trinitycore.org/>
+ *
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -124,11 +128,26 @@ int Master::Run()
     BigNumber seed1;
     seed1.SetRand(16 * 8);
 
+<<<<<<< HEAD
     TC_LOG_INFO(LOG_FILTER_WORLDSERVER, "%s (worldserver-daemon)", _FULLVERSION);
     TC_LOG_INFO(LOG_FILTER_WORLDSERVER, "<Ctrl-C> to stop.\n");
 
     TC_LOG_INFO(LOG_FILTER_WORLDSERVER, "Gulftown");
     TC_LOG_INFO(LOG_FILTER_WORLDSERVER, "http://soulwell.cz \n");
+=======
+	sLog->outInfo(LOG_FILTER_WORLDSERVER, "%s (worldserver-daemon)", _FULLVERSION);
+	sLog->outInfo(LOG_FILTER_WORLDSERVER, " ");
+	sLog->outInfo(LOG_FILTER_WORLDSERVER, " A World of Warcraft: Cataclysm Core Emulator	");
+	sLog->outInfo(LOG_FILTER_WORLDSERVER, "       _/_/              _/          _/_/_/    _/_/    _/_/_/    _/_/_/_/  ");
+	sLog->outInfo(LOG_FILTER_WORLDSERVER, "    _/    _/  _/  _/_/  _/  _/    _/        _/    _/  _/    _/  _/         ");
+	sLog->outInfo(LOG_FILTER_WORLDSERVER, "   _/_/_/_/  _/_/      _/_/      _/        _/    _/  _/_/_/    _/_/_/      ");
+	sLog->outInfo(LOG_FILTER_WORLDSERVER, "  _/    _/  _/        _/  _/    _/        _/    _/  _/    _/  _/           ");
+	sLog->outInfo(LOG_FILTER_WORLDSERVER, " _/    _/  _/        _/    _/    _/_/_/    _/_/    _/    _/  _/_/_/_/  	");
+	sLog->outInfo(LOG_FILTER_WORLDSERVER, " Arkania Community (c) 2013");
+	sLog->outInfo(LOG_FILTER_WORLDSERVER, "      <http://arkania.net/>");
+	sLog->outInfo(LOG_FILTER_WORLDSERVER, " ");
+	sLog->outInfo(LOG_FILTER_WORLDSERVER, "<Ctrl-C> to stop.\n");
+>>>>>>> 7c6fcf96316490f3ed20d451f8f79d83121678d1
 
     /// worldserver PID file creation
     std::string pidfile = ConfigMgr::GetStringDefault("PidFile", "");

@@ -1,5 +1,9 @@
 /*
+ *
+ * Copyright (C) 2011-2013 ArkCORE <http://www.arkania.net/>
+ *
  * Copyright (C) 2008-2013 TrinityCore <http://www.trinitycore.org/>
+ *
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -24,7 +28,11 @@
 #include "Define.h"
 #include "revision.h"
 
+<<<<<<< HEAD
 #define _PACKAGENAME "Core: Gulftown BETA 1 - DEVELOPMENT\nDeveloper: Snajl\n"
+=======
+#define _PACKAGENAME "ArkCORE"
+>>>>>>> 7c6fcf96316490f3ed20d451f8f79d83121678d1
 
 #if TRINITY_ENDIAN == TRINITY_BIGENDIAN
 # define _ENDIAN_STRING "big-endian"
