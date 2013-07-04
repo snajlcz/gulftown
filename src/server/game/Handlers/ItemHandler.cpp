@@ -1477,7 +1477,8 @@ void WorldSession::HandleTransmogrifyItems(WorldPacket& recvData)
             itemTransmogrifier->SetNotRefundable(player);
             itemTransmogrifier->ClearSoulboundTradeable(player);
 
-            cost += itemTransmogrified->GetSpecialPrice();
+            //Free cost for RP purposes
+            //cost += itemTransmogrified->GetSpecialPrice();
         }
     }
 

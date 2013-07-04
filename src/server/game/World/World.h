@@ -109,6 +109,7 @@ enum WorldBoolConfigs
     CONFIG_INSTANT_TAXI,
     CONFIG_INSTANCE_IGNORE_LEVEL,
     CONFIG_INSTANCE_IGNORE_RAID,
+    CONFIG_EXTERNAL_MAIL,
     CONFIG_CAST_UNSTUCK,
     CONFIG_ALLOW_GM_GROUP,
     CONFIG_GM_LOWER_SECURITY,
@@ -168,6 +169,7 @@ enum WorldBoolConfigs
     CONFIG_UI_QUESTLEVELS_IN_DIALOGS,     // Should we add quest levels to the title in the NPC dialogs?
     CONFIG_EVENT_ANNOUNCE,
     CONFIG_STATS_LIMITS_ENABLE,
+    CONFIG_MAIL_LOAD_ACCOUNTWIDE,
     BOOL_CONFIG_VALUE_COUNT
 };
 
@@ -188,6 +190,7 @@ enum WorldFloatConfigs
     CONFIG_STATS_LIMITS_PARRY,
     CONFIG_STATS_LIMITS_BLOCK,
     CONFIG_STATS_LIMITS_CRIT,
+    CONFIG_MAX_AGRO_RANGE,
     FLOAT_CONFIG_VALUE_COUNT
 };
 
@@ -249,6 +252,7 @@ enum WorldIntConfigs
     CONFIG_START_GM_LEVEL,
     CONFIG_GROUP_VISIBILITY,
     CONFIG_MAIL_DELIVERY_DELAY,
+    CONFIG_EXTERNAL_MAIL_INTERVAL,
     CONFIG_UPTIME_UPDATE,
     CONFIG_SKILL_CHANCE_ORANGE,
     CONFIG_SKILL_CHANCE_YELLOW,
@@ -759,6 +763,13 @@ class World
         void UpdatePhaseDefinitions();
         void ReloadRBAC();
 
+        
+        //Custom
+        void CastAll(uint32 spell, bool triggered);
+        void AddItemAll(uint32 itemId, int32 count);
+        void MassUnaura(uint32 spellId);
+        void MassUnauraAll();
+        void MassSummon(uint64 guid, uint32 mapid, float x, float y, float z, uint32 zone, float orient, uint32 phase);
     protected:
         void _UpdateGameTime();
         // callback for UpdateRealmCharacters
@@ -789,6 +800,7 @@ class World
         time_t m_startTime;
         time_t m_gameTime;
         IntervalTimer m_timers[WUPDATE_COUNT];
+        IntervalTimer extmail_timer;
         time_t mail_timer;
         time_t mail_timer_expires;
         uint32 m_updateTime, m_updateTimeSum;

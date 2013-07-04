@@ -629,4 +629,21 @@ void CharacterDatabaseConnection::DoPrepareStatements()
     PrepareStatement(CHAR_UPD_CHAR_PET_SLOT_BY_ID, "UPDATE character_pet SET slot = ? WHERE owner = ? AND id = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_CHAR_PET_BY_ID, "DELETE FROM character_pet WHERE id = ?", CONNECTION_ASYNC);
     PrepareStatement(CHAR_DEL_CHAR_PET_BY_SLOT, "DELETE FROM character_pet WHERE owner = ? AND (slot = ? OR slot > ?)", CONNECTION_ASYNC);
+	
+	// CUSTOM
+    PrepareStatement(CHAR_DEL_CHARACTER_ADDON, "DELETE FROM characters_addon WHERE guid = ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_SEL_MAIL_ACCOUNTWIDE, "SELECT id, messageType, sender, receiver, subject, body, has_items, expire_time, deliver_time, money, cod, checked, stationery, mailTemplateId FROM mail WHERE receiver IN (SELECT guid FROM characters WHERE account = ?) ORDER BY id DESC", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_SEL_CHARACTER_MAILCOUNT_ACCOUNTWIDE, "SELECT COUNT(id) FROM mail WHERE receiver IN (SELECT guid FROM characters WHERE account = ?) AND (checked & 1) = 0 AND deliver_time <= ?", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_SEL_CHARACTER_MAILDATE_ACCOUNTWIDE, "SELECT MIN(deliver_time) FROM mail WHERE receiver IN (SELECT guid FROM characters WHERE account = ?) AND (checked & 1) = 0", CONNECTION_ASYNC);
+    PrepareStatement(CHAR_SEL_CHAR_LIST_INVENTORY_COUNT_ITEM, "SELECT COUNT(owner_guid) FROM character_inventory ci INNER JOIN item_instance ii ON ii.guid = ci.item WHERE owner_guid = ?", CONNECTION_SYNCH);
+    /*PrepareStatement(CHAR_SEL_CHAR_LIST_INVENTORY_ITEM_BY_ENTRY, "SELECT ci.item, cb.slot AS bag, ci.slot, ci.guid, c.account, c.name, ii.itemEntry FROM characters c "
+                     "INNER JOIN character_inventory ci ON ci.guid = c.guid "
+                     "INNER JOIN item_instance ii ON ii.guid = ci.item "
+                     "LEFT JOIN character_inventory cb ON cb.item = ci.bag WHERE ii.owner_guid = ? LIMIT ?", CONNECTION_SYNCH);*/
+    PrepareStatement(CHAR_SEL_CHAR_LIST_INVENTORY_ITEM_BY_ENTRY, "SELECT cb.slot AS bag, ci.slot, ii.itemEntry FROM characters c "
+                     "INNER JOIN character_inventory ci ON ci.guid = c.guid "
+                     "INNER JOIN item_instance ii ON ii.guid = ci.item "
+                     "LEFT JOIN character_inventory cb ON cb.item = ci.bag WHERE ii.owner_guid = ? LIMIT ?", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_GET_EXTERNAL_MAIL, "SELECT id, receiver, subject, body, money, item, item_count FROM mail_external ORDER BY id ASC", CONNECTION_SYNCH);
+    PrepareStatement(CHAR_DEL_EXTERNAL_MAIL, "DELETE FROM mail_external WHERE id = ?", CONNECTION_ASYNC);
 }

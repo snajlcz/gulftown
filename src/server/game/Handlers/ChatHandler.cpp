@@ -180,7 +180,10 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recvData)
             {
                 // send in universal language in two side iteration allowed mode
                 if (HasPermission(RBAC_PERM_TWO_SIDE_INTERACTION_CHAT))
-                    lang = LANG_UNIVERSAL;
+                {
+                    if (lang == LANG_ORCISH || lang == LANG_COMMON)
+                        lang = LANG_UNIVERSAL;
+                }
                 else
                 {
                     switch (type)
@@ -316,14 +319,18 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recvData)
         {
             if (!normalizePlayerName(to))
             {
-                SendPlayerNotFoundNotice(to);
-                break;
+                if (lang != LANG_ADDON)
+                {
+                    SendPlayerNotFoundNotice(to);
+                    break;
+                }
             }
 
             Player* receiver = sObjectAccessor->FindPlayerByName(to);
             if (!receiver || (!receiver->isAcceptWhispers() && receiver->GetSession()->HasPermission(RBAC_PERM_CAN_FILTER_WHISPERS) && !receiver->IsInWhisperWhiteList(sender->GetGUID())))
             {
-                SendPlayerNotFoundNotice(to);
+                if (lang != LANG_ADDON)
+                    SendPlayerNotFoundNotice(to);
                 return;
             }
             if (!sender->IsGameMaster() && sender->getLevel() < sWorld->getIntConfig(CONFIG_CHAT_WHISPER_LEVEL_REQ) && !receiver->IsInWhisperWhiteList(sender->GetGUID()))
@@ -463,6 +470,15 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recvData)
             {
                 if (Channel* chn = cMgr->GetChannel(channel, _player))
                 {
+                    if (channel == "gmc" || channel == "GMC")
+                    {
+                        if (AccountMgr::IsModeratorAccount(GetSecurity()))
+                        {
+                            std::string name = _player->GetSession()->GetPlayer()->GetName();
+                            sWorld->SendGMText(LANG_GM_ANNOUNCE_COLOR, name.c_str(), msg.c_str());
+                        }
+                        break;
+                    }
                     sScriptMgr->OnPlayerChat(_player, type, lang, msg, chn);
                     chn->Say(_player->GetGUID(), msg.c_str(), lang);
                 }

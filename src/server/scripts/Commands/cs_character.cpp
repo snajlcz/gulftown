@@ -63,6 +63,9 @@ public:
             { "rename",         SEC_GAMEMASTER,     true,  &HandleCharacterRenameCommand,          "", NULL },
             { "reputation",     SEC_GAMEMASTER,     true,  &HandleCharacterReputationCommand,      "", NULL },
             { "titles",         SEC_GAMEMASTER,     true,  &HandleCharacterTitlesCommand,          "", NULL },
+            { "faction",        SEC_GAMEMASTER,     true,  &HandleCharacterFactionCommand,         "", NULL },
+            { "factionperm",    SEC_GAMEMASTER,     true,  &HandleCharacterFactionPermCommand,     "", NULL },
+            { "viewitems",      SEC_GAMEMASTER,     true,  &HandleCharacterListItemCommand,        "", NULL },
             { NULL,             0,                  false, NULL,                                   "", NULL }
         };
 
@@ -455,7 +458,10 @@ public:
         if (newlevel < 1)
             return false;                                       // invalid level
 
-        if (newlevel > STRONG_MAX_LEVEL)                         // hardcoded maximum level
+        if (newlevel > DEFAULT_MAX_LEVEL && handler->GetSession()->GetSecurity() < SEC_ADMINISTRATOR) //  Only admins can go above default max level
+            newlevel = DEFAULT_MAX_LEVEL;
+
+        if (newlevel > STRONG_MAX_LEVEL)          // hardcoded maximum level
             newlevel = STRONG_MAX_LEVEL;
 
         HandleCharacterLevel(target, targetGuid, oldlevel, newlevel, handler);
@@ -1008,6 +1014,329 @@ public:
                 handler->SetSentErrorMessage(true);
                 return false;
         }
+
+        return true;
+    }
+
+    // CUSTOM
+    //Edit REAL Player Faction
+    static bool HandleCharacterFactionCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+            return false;
+
+        char* pfactionid = handler->extractKeyFromLink((char*)args,"Hfaction");
+
+	    Player *chr = handler->getSelectedPlayer();
+
+        if (!chr)
+        {
+            handler->SendSysMessage(LANG_NO_CHAR_SELECTED);
+            handler->SetSentErrorMessage(true);
+            return false;
+        }
+
+        if (!pfactionid)
+        {
+            if (chr)
+            {
+                uint32 factionid = chr->getFaction();
+                uint32 flag      = chr->GetUInt32Value(UNIT_FIELD_FLAGS);
+                handler->PSendSysMessage(LANG_CURRENT_FACTION_PLAYER,chr->GetName(),factionid,flag);
+            }
+            return true;
+        }
+
+        uint32 factionid = atoi(pfactionid);
+        uint32 flag;
+
+        char *pflag = strtok(NULL, " ");
+        if (!pflag)
+            flag = chr->GetUInt32Value(UNIT_FIELD_FLAGS);
+        else
+            flag = atoi(pflag);
+
+        if (!sFactionTemplateStore.LookupEntry(factionid))
+        {
+            handler->PSendSysMessage(LANG_WRONG_FACTION, factionid);
+            handler->SetSentErrorMessage(true);
+            return false;
+        }
+
+        handler->PSendSysMessage(LANG_YOU_CHANGE_FACTION_PLAYER, chr->GetName(),factionid,flag);
+
+        chr->setFaction(factionid);
+        chr->SetUInt32Value(UNIT_FIELD_FLAGS,flag);
+
+        return true;
+    }
+
+    //Change character faction permanent
+    static bool HandleCharacterFactionPermCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+            return false;
+
+        char* pfactionid = handler->extractKeyFromLink((char*)args,"Hfaction");
+
+	    Player *chr = handler->getSelectedPlayer();
+
+        if (!chr)
+        {
+            handler->SendSysMessage(LANG_NO_CHAR_SELECTED);
+            handler->SetSentErrorMessage(true);
+            return false;
+        }
+
+        if (!pfactionid)
+        {
+            if (chr)
+            {
+                uint32 factionid = chr->getFaction();
+                handler->PSendSysMessage(LANG_CURRENT_FACTION_PLAYER,chr->GetName(),factionid);
+            }
+            return true;
+        }
+
+        // check online security
+        if (handler->HasLowerSecurity(chr, 0))
+            return false;
+
+        uint32 factionid = atoi(pfactionid);
+
+        if (!sFactionTemplateStore.LookupEntry(factionid))
+        {
+            handler->PSendSysMessage(LANG_WRONG_FACTION, factionid);
+            handler->SetSentErrorMessage(true);
+            return false;
+        }
+
+        QueryResult result = CharacterDatabase.PQuery("SELECT faction FROM characters_addon WHERE guid='%u'", handler->getSelectedPlayer()->GetGUIDLow());
+	    if(result)
+	    {
+            //Field* fields = result->Fetch();
+            //uint16 customFaction = fields[0].GetUInt16();
+
+            if (factionid > 2)
+            {
+                handler->PSendSysMessage(LANG_YOU_CHANGE_FACTION_PLAYER_PERM, chr->GetName(),factionid);
+
+                chr->setFaction(factionid);
+                QueryResult result = CharacterDatabase.PQuery("UPDATE characters_addon SET faction='%u' WHERE guid='%u'", factionid, handler->getSelectedPlayer()->GetGUIDLow());
+
+                return true;
+            }
+            else
+            {
+                handler->PSendSysMessage(LANG_YOU_CHANGE_FACTION_PLAYER_PERM, chr->GetName(),factionid);
+
+                chr->setFaction(factionid);
+                QueryResult result = CharacterDatabase.PQuery("UPDATE characters_addon SET faction='0' WHERE guid='%u'", handler->getSelectedPlayer()->GetGUIDLow());
+
+                return true;
+            }
+	    }
+
+        else
+        {
+            handler->PSendSysMessage(LANG_YOU_CHANGE_FACTION_PLAYER_PERM, chr->GetName(),factionid);
+
+            chr->setFaction(factionid);
+            CharacterDatabase.PExecute("INSERT INTO characters_addon(guid,faction) VALUES ('%u','%u')", handler->getSelectedPlayer()->GetGUIDLow(), factionid);
+
+            return true;
+	    }
+    }
+
+    //List character items
+    static bool HandleCharacterListItemCommand(ChatHandler* handler, char const* args)
+    {
+        if (!*args)
+            return false;
+
+        Player* target;
+        uint64 targetGuid;
+        std::string targetName;
+        uint32 itemId = 0;
+        if (!handler->extractPlayerTarget((char*)args, &target, &targetGuid, &targetName))
+            return false;
+
+        if (target)
+        {
+            // check online security
+            if (handler->HasLowerSecurity(target, 0))
+                return false;
+        }
+        else
+        {
+            // check offline security
+            if (handler->HasLowerSecurity(NULL, targetGuid))
+                return false;
+        }
+
+        char* countStr = strtok(NULL, " ");
+        uint32 count = countStr ? atol(countStr) : 100;
+
+        if (count == 0)
+            return false;
+
+        PreparedQueryResult result;
+
+        // inventory case
+        uint32 inventoryCount = 0;
+
+        PreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_CHAR_LIST_INVENTORY_COUNT_ITEM);
+        stmt->setUInt32(0, targetGuid);
+        result = CharacterDatabase.Query(stmt);
+
+        if (result)
+            inventoryCount = (*result)[0].GetUInt64();
+
+        stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_CHAR_LIST_INVENTORY_ITEM_BY_ENTRY);
+        stmt->setUInt32(0, targetGuid);
+        stmt->setUInt32(1, count);
+        result = CharacterDatabase.Query(stmt);
+
+        if (result)
+        {
+            do
+            {
+                Field* fields           = result->Fetch();
+                //uint32 itemGuid         = fields[0].GetUInt32();
+                uint32 itemBag          = fields[0].GetUInt32();
+                uint8 itemSlot          = fields[1].GetUInt8();
+                //uint32 ownerGuid        = fields[3].GetUInt32();
+                //uint32 ownerAccountId   = fields[4].GetUInt32();
+                //std::string ownerName   = fields[5].GetString();
+                uint32 itemEntry   = fields[2].GetUInt32();
+
+                char const* itemPos = 0;
+                if (Player::IsEquipmentPos(itemBag, itemSlot))
+                    itemPos = "[equipped]";
+                else if (Player::IsInventoryPos(itemBag, itemSlot))
+                    itemPos = "[in inventory]";
+                else if (Player::IsBankPos(itemBag, itemSlot))
+                    itemPos = "[in bank]";
+                else
+                    itemPos = "";
+
+                ItemTemplateContainer const* its = sObjectMgr->GetItemTemplateStore();
+                for (ItemTemplateContainer::const_iterator itr = its->begin(); itr != its->end(); ++itr)
+                {
+                    std::string name = itr->second.Name1;
+                    if (name.empty())
+                        continue;
+
+                    if (itemEntry == itr->second.ItemId)
+                        handler->PSendSysMessage(LANG_CHARACTER_ITEMLIST_SLOT, itemEntry, itemEntry, name.c_str(), itemPos);
+                }
+
+                //handler->PSendSysMessage(LANG_CHARACTER_ITEMLIST_SLOT, itemGuid, ownerName.c_str(), ownerGuid, ownerAccountId, itemPos);
+            }
+            while (result->NextRow());
+
+            uint32 resultCount = uint32(result->GetRowCount());
+
+            if (count > resultCount)
+                count -= resultCount;
+            else if (count)
+                count = 0;
+        }
+        
+        // mail case
+        uint32 mailCount = 0;
+        /*
+        stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_MAIL_COUNT_ITEM);
+        stmt->setUInt32(0, itemId);
+        result = CharacterDatabase.Query(stmt);
+
+        if (result)
+            mailCount = (*result)[0].GetUInt64();
+
+        if (count > 0)
+        {
+            stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_MAIL_ITEMS_BY_ENTRY);
+            stmt->setUInt32(0, itemId);
+            stmt->setUInt32(1, count);
+            result = CharacterDatabase.Query(stmt);
+        }
+        else
+            result = PreparedQueryResult(NULL);
+
+        if (result)
+        {
+            do
+            {
+                Field* fields                   = result->Fetch();
+                uint32 itemGuid                 = fields[0].GetUInt32();
+                uint32 itemSender               = fields[1].GetUInt32();
+                uint32 itemReceiver             = fields[2].GetUInt32();
+                uint32 itemSenderAccountId      = fields[3].GetUInt32();
+                std::string itemSenderName      = fields[4].GetString();
+                uint32 itemReceiverAccount      = fields[5].GetUInt32();
+                std::string itemReceiverName    = fields[6].GetString();
+
+                char const* itemPos = "[in mail]";
+
+                handler->PSendSysMessage(LANG_CHARACTER_ITEMLIST_MAIL, itemGuid, itemSenderName.c_str(), itemSender, itemSenderAccountId, itemReceiverName.c_str(), itemReceiver, itemReceiverAccount, itemPos);
+            }
+            while (result->NextRow());
+
+            uint32 resultCount = uint32(result->GetRowCount());
+
+            if (count > resultCount)
+                count -= resultCount;
+            else if (count)
+                count = 0;
+        }
+        */
+        // auction case
+        uint32 auctionCount = 0;
+        /*
+        stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_AUCTIONHOUSE_COUNT_ITEM);
+        stmt->setUInt32(0, itemId);
+        result = CharacterDatabase.Query(stmt);
+
+        if (result)
+            auctionCount = (*result)[0].GetUInt64();
+
+        if (count > 0)
+        {
+            stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_AUCTIONHOUSE_ITEM_BY_ENTRY);
+            stmt->setUInt32(0, itemId);
+            stmt->setUInt32(1, count);
+            result = CharacterDatabase.Query(stmt);
+        }
+        else
+            result = PreparedQueryResult(NULL);
+
+        if (result)
+        {
+            do
+            {
+                Field* fields           = result->Fetch();
+                uint32 itemGuid         = fields[0].GetUInt32();
+                uint32 owner            = fields[1].GetUInt32();
+                uint32 ownerAccountId   = fields[2].GetUInt32();
+                std::string ownerName   = fields[3].GetString();
+
+                char const* itemPos = "[in auction]";
+
+                handler->PSendSysMessage(LANG_CHARACTER_ITEMLIST_AUCTION, itemGuid, ownerName.c_str(), owner, ownerAccountId, itemPos);
+            }
+            while (result->NextRow());
+        }
+        */
+		
+        if (inventoryCount + mailCount + auctionCount == 0)
+        {
+            handler->SendSysMessage(LANG_COMMAND_NOITEMFOUND);
+            handler->SetSentErrorMessage(true);
+            return false;
+        }
+
+        //handler->PSendSysMessage(LANG_COMMAND_LISTITEMMESSAGE, itemId, inventoryCount + mailCount + auctionCount + guildCount, inventoryCount, mailCount, auctionCount, guildCount);
+        handler->PSendSysMessage(LANG_COMMAND_CHAR_LISTITEMMESSAGE, targetName, inventoryCount + mailCount + auctionCount, inventoryCount, mailCount, auctionCount);
 
         return true;
     }

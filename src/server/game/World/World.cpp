@@ -910,6 +910,9 @@ void World::LoadConfigSettings(bool reload)
     m_int_configs[CONFIG_GROUP_VISIBILITY] = ConfigMgr::GetIntDefault("Visibility.GroupMode", 1);
 
     m_int_configs[CONFIG_MAIL_DELIVERY_DELAY] = ConfigMgr::GetIntDefault("MailDeliveryDelay", HOUR);
+    m_bool_configs[CONFIG_EXTERNAL_MAIL] = ConfigMgr::GetBoolDefault("ExternalMail", false);
+    m_int_configs[CONFIG_EXTERNAL_MAIL_INTERVAL] = ConfigMgr::GetIntDefault("ExternalMailInterval", 1);
+    m_bool_configs[CONFIG_MAIL_LOAD_ACCOUNTWIDE] = ConfigMgr::GetBoolDefault("MailLoadAccountwide", false);
 
     m_int_configs[CONFIG_UPTIME_UPDATE] = ConfigMgr::GetIntDefault("UpdateUptimeInterval", 10);
     if (int32(m_int_configs[CONFIG_UPTIME_UPDATE]) <= 0)
@@ -1037,6 +1040,7 @@ void World::LoadConfigSettings(bool reload)
     m_bool_configs[CONFIG_DIE_COMMAND_MODE] = ConfigMgr::GetBoolDefault("Die.Command.Mode", true);
 
     m_float_configs[CONFIG_THREAT_RADIUS] = ConfigMgr::GetFloatDefault("ThreatRadius", 60.0f);
+    m_float_configs[CONFIG_MAX_AGRO_RANGE] = ConfigMgr::GetFloatDefault("MaxAgroRange", 45.0f);
 
     // always use declined names in the russian client
     m_bool_configs[CONFIG_DECLINED_NAMES_USED] =
@@ -1780,6 +1784,7 @@ void World::SetInitialWorldSettings()
     /// @todo Get rid of magic numbers
     mail_timer = ((((localtime(&m_gameTime)->tm_hour + 20) % 24)* HOUR * IN_MILLISECONDS) / m_timers[WUPDATE_AUCTIONS].GetInterval());
                                                             //1440
+    extmail_timer.SetInterval(m_int_configs[CONFIG_EXTERNAL_MAIL_INTERVAL] * MINUTE * IN_MILLISECONDS);
     mail_timer_expires = ((DAY * IN_MILLISECONDS) / (m_timers[WUPDATE_AUCTIONS].GetInterval()));
     TC_LOG_INFO(LOG_FILTER_SERVER_LOADING, "Mail timer set to: " UI64FMTD ", mail return is called every " UI64FMTD " minutes", uint64(mail_timer), uint64(mail_timer_expires));
 
@@ -1979,6 +1984,17 @@ void World::Update(uint32 diff)
 
     if (m_gameTime > m_NextRandomBGReset)
         ResetRandomBG();
+
+    // Handle external mail
+    if (sWorld->getBoolConfig(CONFIG_EXTERNAL_MAIL))
+    {
+        extmail_timer.Update(diff);
+        if (extmail_timer.Passed())
+        {
+            WorldSession::SendExternalMails();
+            extmail_timer.Reset();
+        }
+    }
 
     if (m_gameTime > m_NextGuildReset)
         ResetGuildCap();
@@ -3269,4 +3285,108 @@ void World::ReloadRBAC()
     for (SessionMap::const_iterator itr = m_sessions.begin(); itr != m_sessions.end(); ++itr)
         if (WorldSession* session = itr->second)
             session->InvalidateRBACData();
+}
+
+void World::CastAll(uint32 spell, bool triggered)
+{
+    for (SessionMap::iterator itr = m_sessions.begin(); itr != m_sessions.end(); ++itr)
+    {
+        if (itr->second &&
+            itr->second->GetPlayer() &&
+            itr->second->GetPlayer()->IsInWorld())
+        {
+            Player* target = itr->second->GetPlayer();
+            target->CastSpell(target, spell, triggered);
+        }
+    }
+}
+
+void World::AddItemAll(uint32 itemId, int32 count)
+{
+    for (SessionMap::iterator itr = m_sessions.begin(); itr != m_sessions.end(); ++itr)
+    {
+        if (itr->second &&
+            itr->second->GetPlayer() &&
+            itr->second->GetPlayer()->IsInWorld())
+        {
+            Player* target = itr->second->GetPlayer();
+
+            //Subtract
+            if (count < 0)
+            {
+                target->DestroyItemCount(itemId, -count, true, false);
+                break;
+            }
+
+            //Adding items
+            uint32 noSpaceForCount = 0;
+
+            // check space and find places
+            ItemPosCountVec dest;
+            InventoryResult msg = target->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, itemId, count, &noSpaceForCount);
+            if (msg != EQUIP_ERR_OK)                               // convert to possible store amount
+                count -= noSpaceForCount;
+
+            if (count == 0 || dest.empty())                         // can't add any
+                break;
+
+            Item* item = target->StoreNewItem(dest, itemId, true, Item::GenerateItemRandomPropertyId(itemId));
+
+            if (count > 0 && item)
+            {
+                target->SendNewItem(item, count, true, false);
+            }
+
+            if (noSpaceForCount > 0)
+                break;
+        }
+    }
+}
+
+void World::MassUnaura(uint32 spellId)
+{
+    for (SessionMap::iterator itr = m_sessions.begin(); itr != m_sessions.end(); ++itr)
+    {
+        if (itr->second &&
+            itr->second->GetPlayer() &&
+            itr->second->GetPlayer()->IsInWorld())
+        {
+            Player* target = itr->second->GetPlayer();
+            target->RemoveAurasDueToSpell(spellId);
+        }
+    }
+}
+
+void World::MassUnauraAll()
+{
+    for (SessionMap::iterator itr = m_sessions.begin(); itr != m_sessions.end(); ++itr)
+    {
+        if (itr->second &&
+            itr->second->GetPlayer() &&
+            itr->second->GetPlayer()->IsInWorld())
+        {
+            Player* target = itr->second->GetPlayer();
+            target->RemoveAllAuras();
+        }
+    }
+}
+
+void World::MassSummon(uint64 guid, uint32 mapid, float x, float y, float z, uint32 zone, float orient, uint32 phase)
+{
+    for (SessionMap::iterator itr = m_sessions.begin(); itr != m_sessions.end(); ++itr)
+    {
+        if (itr->second &&
+            itr->second->GetPlayer() &&
+            itr->second->GetPlayer()->IsInWorld())
+        {
+            Player* target = itr->second->GetPlayer();
+            target->SetSummonPoint(mapid, x, y, z);
+
+            WorldPacket data(SMSG_SUMMON_REQUEST, 8+4+4);
+            data << uint64(guid);
+            data << uint32(zone);
+            data << uint32(MAX_PLAYER_SUMMON_DELAY*IN_MILLISECONDS);
+            target->GetSession()->SendPacket(&data);
+        }
+    }
 }

@@ -545,8 +545,8 @@ void ObjectMgr::LoadCreatureTemplateAddons()
 {
     uint32 oldMSTime = getMSTime();
 
-    //                                                0       1       2      3       4       5      6
-    QueryResult result = WorldDatabase.Query("SELECT entry, path_id, mount, bytes1, bytes2, emote, auras FROM creature_template_addon");
+    //                                                0       1       2      3       4       5      6      7      8
+    QueryResult result = WorldDatabase.Query("SELECT entry, path_id, mount, bytes1, bytes2, emote, auras, scale, faction FROM creature_template_addon");
 
     if (!result)
     {
@@ -576,6 +576,8 @@ void ObjectMgr::LoadCreatureTemplateAddons()
         creatureAddon.emote   = fields[5].GetUInt32();
 
         Tokenizer tokens(fields[6].GetString(), ' ');
+        creatureAddon.scale   = fields[7].GetFloat();
+        creatureAddon.faction = uint32(fields[8].GetUInt16());
         uint8 i = 0;
         creatureAddon.auras.resize(tokens.size());
         for (Tokenizer::const_iterator itr = tokens.begin(); itr != tokens.end(); ++itr)
@@ -602,6 +604,15 @@ void ObjectMgr::LoadCreatureTemplateAddons()
         {
             TC_LOG_ERROR(LOG_FILTER_SQL, "Creature (Entry: %u) has invalid emote (%u) defined in `creature_addon`.", entry, creatureAddon.emote);
             creatureAddon.emote = 0;
+        }
+
+        if (creatureAddon.faction)
+        {
+            if (!sFactionTemplateStore.LookupEntry(creatureAddon.faction))
+            {
+                sLog->outError(LOG_FILTER_SQL, "Creature (Entry: %u) has invalid faction (%u) defined in `creature_template_addon`.", entry, creatureAddon.faction);
+                creatureAddon.faction = 0;
+            }
         }
 
         ++count;
@@ -911,8 +922,8 @@ void ObjectMgr::LoadCreatureAddons()
 {
     uint32 oldMSTime = getMSTime();
 
-    //                                                0       1       2      3       4       5      6
-    QueryResult result = WorldDatabase.Query("SELECT guid, path_id, mount, bytes1, bytes2, emote, auras FROM creature_addon");
+    //                                                0       1       2      3       4       5      6      7      8
+    QueryResult result = WorldDatabase.Query("SELECT guid, path_id, mount, bytes1, bytes2, emote, auras, scale, faction FROM creature_addon");
 
     if (!result)
     {
@@ -949,6 +960,8 @@ void ObjectMgr::LoadCreatureAddons()
         creatureAddon.emote   = fields[5].GetUInt32();
 
         Tokenizer tokens(fields[6].GetString(), ' ');
+        creatureAddon.scale   = fields[7].GetFloat();
+        creatureAddon.faction = uint32(fields[8].GetUInt16());
         uint8 i = 0;
         creatureAddon.auras.resize(tokens.size());
         for (Tokenizer::const_iterator itr = tokens.begin(); itr != tokens.end(); ++itr)
@@ -971,10 +984,24 @@ void ObjectMgr::LoadCreatureAddons()
             }
         }
 
-        if (!sEmotesStore.LookupEntry(creatureAddon.emote))
+        if (creatureAddon.emote)
         {
             TC_LOG_ERROR(LOG_FILTER_SQL, "Creature (GUID: %u) has invalid emote (%u) defined in `creature_addon`.", guid, creatureAddon.emote);
             creatureAddon.emote = 0;
+            if (!sEmotesStore.LookupEntry(creatureAddon.emote))
+            {
+                TC_LOG_ERROR(LOG_FILTER_SQL, "Creature (GUID: %u) has invalid emote (%u) defined in `creature_addon`.", guid, creatureAddon.emote);
+                creatureAddon.emote = 0;
+            }
+        }
+
+        if (creatureAddon.faction)
+        {
+            if (!sFactionTemplateStore.LookupEntry(creatureAddon.faction))
+            {
+                sLog->outError(LOG_FILTER_SQL, "Creature (GUID: %u) has invalid faction (%u) defined in `creature_addon`.", guid, creatureAddon.faction);
+                creatureAddon.faction = 0;
+            }
         }
 
         ++count;
@@ -1844,10 +1871,11 @@ void ObjectMgr::LoadGameobjects()
 
     //                                                0                1   2    3           4           5           6
     QueryResult result = WorldDatabase.Query("SELECT gameobject.guid, id, map, position_x, position_y, position_z, orientation, "
-    //   7          8          9          10         11             12            13     14         15         16          17
-        "rotation0, rotation1, rotation2, rotation3, spawntimesecs, animprogress, state, spawnMask, phaseMask, eventEntry, pool_entry "
+    //   7          8          9          10         11             12            13     14         15         16          17          18
+        "rotation0, rotation1, rotation2, rotation3, spawntimesecs, animprogress, state, spawnMask, phaseMask, eventEntry, pool_entry, gameobject_addon.scale "
         "FROM gameobject LEFT OUTER JOIN game_event_gameobject ON gameobject.guid = game_event_gameobject.guid "
-        "LEFT OUTER JOIN pool_gameobject ON gameobject.guid = pool_gameobject.guid");
+        "LEFT OUTER JOIN pool_gameobject ON gameobject.guid = pool_gameobject.guid "
+        "LEFT OUTER JOIN gameobject_addon ON gameobject.guid = gameobject_addon.guid");
 
     if (!result)
     {
@@ -1942,6 +1970,7 @@ void ObjectMgr::LoadGameobjects()
         data.phaseMask      = fields[15].GetUInt16();
         int16 gameEvent     = fields[16].GetInt8();
         uint32 PoolId        = fields[17].GetUInt32();
+        data.scale          = fields[18].GetFloat();
 
         if (data.rotation2 < -1.0f || data.rotation2 > 1.0f)
         {
@@ -5560,7 +5589,8 @@ void ObjectMgr::GetTaxiPath(uint32 source, uint32 destination, uint32 &path, uin
         return;
     }
 
-    cost = dest_i->second.price;
+    //cost = dest_i->second.price;
+    cost = 0; // Custom - free taxis
     path = dest_i->second.ID;
 }
 
@@ -5927,7 +5957,7 @@ void ObjectMgr::LoadAreaTriggerTeleports()
         if (!atEntry)
         {
             TC_LOG_ERROR(LOG_FILTER_SQL, "Area trigger (ID:%u) does not exist in `AreaTrigger.dbc`.", Trigger_ID);
-            continue;
+            //continue;
         }
 
         MapEntry const* mapEntry = sMapStore.LookupEntry(at.target_mapId);
