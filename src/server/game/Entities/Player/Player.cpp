@@ -1368,6 +1368,10 @@ void Player::HandleDrowning(uint32 time_diff)
     // In water
     if (m_MirrorTimerFlags & UNDERWATER_INWATER)
     {
+        if (m_zoneUpdateId == 5144) return;
+        if (m_zoneUpdateId == 5145) return;
+        if (m_zoneUpdateId == 4815) return;
+
         // Breath timer not activated - activate it
         if (m_MirrorTimer[BREATH_TIMER] == DISABLED_MIRROR_TIMER)
         {
@@ -1404,6 +1408,10 @@ void Player::HandleDrowning(uint32 time_diff)
     // In dark water
     if (m_MirrorTimerFlags & UNDERWARER_INDARKWATER)
     {
+        if (m_zoneUpdateId == 5144) return;
+        if (m_zoneUpdateId == 5145) return;
+        if (m_zoneUpdateId == 4815) return;
+        
         // Fatigue timer not activated - activate it
         if (m_MirrorTimer[FATIGUE_TIMER] == DISABLED_MIRROR_TIMER)
         {
@@ -26171,6 +26179,20 @@ void Player::SendClearAllCooldowns(Unit* target)
     SendDirectMessage(&data);
 }
 
+void Player::UpdateSpellCooldown(uint32 spell_id, int32 amount)
+{
+    uint32 curCooldown = GetSpellCooldownDelay(spell_id);
+    curCooldown = (curCooldown + amount) > 0 ? curCooldown + amount : 0;
+
+    AddSpellCooldown(spell_id, 0, uint32(time(NULL) + curCooldown));
+
+    WorldPacket data(SMSG_MODIFY_COOLDOWN, 4+8+4);
+    data << uint32(spell_id);               // Spell ID
+    data << uint64(GetGUID());              // Player GUID
+    data << int32(amount * 1000);           // Cooldown mod in milliseconds
+    GetSession()->SendPacket(&data);
+}
+
 void Player::ResetMap()
 {
     // this may be called during Map::Update
@@ -27020,7 +27042,7 @@ float Player::GetCollisionHeight(bool mounted) const
         CreatureModelDataEntry const* modelData = sCreatureModelDataStore.LookupEntry(displayInfo->ModelId);
         ASSERT(modelData);
 
-        return modelData->CollisionHeight;
+        return modelData->CollisionHeight + 1.15f;
     }
 }
 
