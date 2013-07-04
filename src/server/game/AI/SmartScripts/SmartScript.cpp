@@ -897,13 +897,19 @@ void SmartScript::ProcessAction(SmartScriptHolder& e, Unit* unit, uint32 var0, u
         }
         case SMART_ACTION_CALL_KILLEDMONSTER:
         {
-            Player* player = NULL;
-            if (me)
-                player = me->GetLootRecipient();
+            if (e.target.type == SMART_TARGET_NONE) // Loot recipient and his group members
+            {
+                if (!me)
+                    break;
 
-            if (me && player)
-                player->RewardPlayerAndGroupAtEvent(e.action.killedMonster.creature, player);
-            else if (GetBaseObject())
+                if (Player* player = me->GetLootRecipient())
+                {
+                    player->RewardPlayerAndGroupAtEvent(e.action.killedMonster.creature, player);
+                    TC_LOG_DEBUG(LOG_FILTER_DATABASE_AI, "SmartScript::ProcessAction: SMART_ACTION_CALL_KILLEDMONSTER: Player %u, Killcredit: %u",
+                        player->GetGUIDLow(), e.action.killedMonster.creature);
+                }
+            }
+            else // Specific target type
             {
                 ObjectList* targets = GetTargets(e, unit);
                 if (!targets)
@@ -911,29 +917,22 @@ void SmartScript::ProcessAction(SmartScriptHolder& e, Unit* unit, uint32 var0, u
 
                 for (ObjectList::const_iterator itr = targets->begin(); itr != targets->end(); ++itr)
                 {
-                    // Special handling for vehicles
-                    if (IsUnit(*itr))
+                    if (IsPlayer(*itr))
+                    {
+                        (*itr)->ToPlayer()->KilledMonsterCredit(e.action.killedMonster.creature);
+                        TC_LOG_DEBUG(LOG_FILTER_DATABASE_AI, "SmartScript::ProcessAction: SMART_ACTION_CALL_KILLEDMONSTER: Player %u, Killcredit: %u",
+                            (*itr)->GetGUIDLow(), e.action.killedMonster.creature);
+                    } 
+                    else if (IsUnit(*itr)) // Special handling for vehicles
                         if (Vehicle* vehicle = (*itr)->ToUnit()->GetVehicleKit())
                             for (SeatMap::iterator it = vehicle->Seats.begin(); it != vehicle->Seats.end(); ++it)
-                                if (Player* player = ObjectAccessor::FindPlayer(it->second.Passenger.Guid))
-                                    player->RewardPlayerAndGroupAtEvent(e.action.killedMonster.creature, player);
-
-                    if (!IsPlayer(*itr))
-                        continue;
-
-                    (*itr)->ToPlayer()->RewardPlayerAndGroupAtEvent(e.action.killedMonster.creature, (*itr)->ToPlayer());
-                    TC_LOG_DEBUG(LOG_FILTER_DATABASE_AI, "SmartScript::ProcessAction: SMART_ACTION_CALL_KILLEDMONSTER: Player %u, Killcredit: %u",
-                        (*itr)->GetGUIDLow(), e.action.killedMonster.creature);
+                                if (Player* player = ObjectAccessor::FindPlayer(it->second.Passenger))
+                                    player->KilledMonsterCredit(e.action.killedMonster.creature);
                 }
 
                 delete targets;
             }
-            else if (trigger && IsPlayer(unit))
-            {
-                unit->ToPlayer()->RewardPlayerAndGroupAtEvent(e.action.killedMonster.creature, unit);
-                TC_LOG_DEBUG(LOG_FILTER_DATABASE_AI, "SmartScript::ProcessAction: SMART_ACTION_CALL_KILLEDMONSTER: (trigger == true) Player %u, Killcredit: %u",
-                    unit->GetGUIDLow(), e.action.killedMonster.creature);
-            }
+
             break;
         }
         case SMART_ACTION_SET_INST_DATA:
@@ -1300,10 +1299,10 @@ void SmartScript::ProcessAction(SmartScriptHolder& e, Unit* unit, uint32 var0, u
 
             for (ObjectList::const_iterator itr = targets->begin(); itr != targets->end(); ++itr)
             {
-                if (!IsPlayer(*itr))
-                    continue;
-
-                (*itr)->ToPlayer()->TeleportTo(e.action.teleport.mapID, e.target.x, e.target.y, e.target.z, e.target.o);
+                if (IsPlayer(*itr))
+                    (*itr)->ToPlayer()->TeleportTo(e.action.teleport.mapID, e.target.x, e.target.y, e.target.z, e.target.o);
+                else if (IsCreature(*itr))
+                    (*itr)->ToCreature()->NearTeleportTo(e.target.x, e.target.y, e.target.z, e.target.o);
             }
 
             delete targets;
@@ -2101,6 +2100,64 @@ void SmartScript::ProcessAction(SmartScriptHolder& e, Unit* unit, uint32 var0, u
             {
                 if (unit && e.action.creatureGroup.attackInvoker)
                     (*itr)->AI()->AttackStart(unit);
+            }
+
+            break;
+        }
+        case SMART_ACTION_ADD_PASSENGER:
+        {
+            if (!GetBaseObject())
+                break;
+
+            if (!IsCreature(GetBaseObject()->ToCreature()))
+                break;
+
+            Vehicle* veh = GetBaseObject()->ToCreature()->GetVehicleKit();
+            if (!veh)
+            {
+                TC_LOG_ERROR(LOG_FILTER_DATABASE_AI, "SmartScript::ProcessAction: SMART_ACTION_ADD_PASSENGER: Creature entry %u is not a vehicle, exiting!", me->GetEntry());
+                return;
+            }
+
+            ObjectList* targets = GetTargets(e, unit);
+            if (targets && *targets->begin())
+            {
+                if (!IsUnit(*targets->begin()))
+                    break;
+
+                veh->AddPassenger((*targets->begin())->ToUnit(), e.action.vehicle.seatId);
+
+                delete targets;
+            }
+
+            break;
+        }
+        case SMART_ACTION_REMOVE_PASSENGER:
+        {
+            if (!GetBaseObject())
+                break;
+
+            if (!IsCreature(GetBaseObject()->ToCreature()))
+                break;
+
+            Vehicle* veh = GetBaseObject()->ToCreature()->GetVehicleKit();
+            if (!veh)
+                break;
+			
+            if (e.GetTargetType() == SMART_TARGET_NONE)
+                veh->RemoveAllPassengers();
+            else
+            {
+                ObjectList* targets = GetTargets(e, unit);
+                if (targets && *targets->begin())
+                {
+                    if (!IsUnit(*targets->begin()))
+                        break;
+
+                    veh->RemovePassenger((*targets->begin())->ToUnit());
+
+                    delete targets;
+                }
             }
 
             break;
