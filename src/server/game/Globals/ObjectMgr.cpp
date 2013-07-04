@@ -549,8 +549,8 @@ void ObjectMgr::LoadCreatureTemplateAddons()
 {
     uint32 oldMSTime = getMSTime();
 
-    //                                                0       1       2      3       4       5      6      7      8
-    QueryResult result = WorldDatabase.Query("SELECT entry, path_id, mount, bytes1, bytes2, emote, auras, scale, faction FROM creature_template_addon");
+    //                                                0       1       2      3       4       5      6
+    QueryResult result = WorldDatabase.Query("SELECT entry, path_id, mount, bytes1, bytes2, emote, auras FROM creature_template_addon");
 
     if (!result)
     {
@@ -580,8 +580,6 @@ void ObjectMgr::LoadCreatureTemplateAddons()
         creatureAddon.emote   = fields[5].GetUInt32();
 
         Tokenizer tokens(fields[6].GetString(), ' ');
-        creatureAddon.scale   = fields[7].GetFloat();
-        creatureAddon.faction = uint32(fields[8].GetUInt16());
         uint8 i = 0;
         creatureAddon.auras.resize(tokens.size());
         for (Tokenizer::const_iterator itr = tokens.begin(); itr != tokens.end(); ++itr)
@@ -608,15 +606,6 @@ void ObjectMgr::LoadCreatureTemplateAddons()
         {
             TC_LOG_ERROR(LOG_FILTER_SQL, "Creature (Entry: %u) has invalid emote (%u) defined in `creature_addon`.", entry, creatureAddon.emote);
             creatureAddon.emote = 0;
-        }
-
-        if (creatureAddon.faction)
-        {
-            if (!sFactionTemplateStore.LookupEntry(creatureAddon.faction))
-            {
-                sLog->outError(LOG_FILTER_SQL, "Creature (Entry: %u) has invalid faction (%u) defined in `creature_template_addon`.", entry, creatureAddon.faction);
-                creatureAddon.faction = 0;
-            }
         }
 
         ++count;
