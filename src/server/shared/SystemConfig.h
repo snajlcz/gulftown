@@ -28,11 +28,7 @@
 #include "Define.h"
 #include "revision.h"
 
-<<<<<<< HEAD
 #define _PACKAGENAME "Core: Gulftown BETA 1 - DEVELOPMENT\nDeveloper: Snajl\n"
-=======
-#define _PACKAGENAME "ArkCORE"
->>>>>>> 7c6fcf96316490f3ed20d451f8f79d83121678d1
 
 #if TRINITY_ENDIAN == TRINITY_BIGENDIAN
 # define _ENDIAN_STRING "big-endian"

@@ -63,7 +63,6 @@ public:
             { "rename",         SEC_GAMEMASTER,     true,  &HandleCharacterRenameCommand,          "", NULL },
             { "reputation",     SEC_GAMEMASTER,     true,  &HandleCharacterReputationCommand,      "", NULL },
             { "titles",         SEC_GAMEMASTER,     true,  &HandleCharacterTitlesCommand,          "", NULL },
-            { "faction",        SEC_GAMEMASTER,     true,  &HandleCharacterFactionCommand,         "", NULL },
             { "factionperm",    SEC_GAMEMASTER,     true,  &HandleCharacterFactionPermCommand,     "", NULL },
             { "viewitems",      SEC_GAMEMASTER,     true,  &HandleCharacterListItemCommand,        "", NULL },
             { NULL,             0,                  false, NULL,                                   "", NULL }
@@ -1014,59 +1013,6 @@ public:
                 handler->SetSentErrorMessage(true);
                 return false;
         }
-
-        return true;
-    }
-
-    // CUSTOM
-    //Edit REAL Player Faction
-    static bool HandleCharacterFactionCommand(ChatHandler* handler, char const* args)
-    {
-        if (!*args)
-            return false;
-
-        char* pfactionid = handler->extractKeyFromLink((char*)args,"Hfaction");
-
-	    Player *chr = handler->getSelectedPlayer();
-
-        if (!chr)
-        {
-            handler->SendSysMessage(LANG_NO_CHAR_SELECTED);
-            handler->SetSentErrorMessage(true);
-            return false;
-        }
-
-        if (!pfactionid)
-        {
-            if (chr)
-            {
-                uint32 factionid = chr->getFaction();
-                uint32 flag      = chr->GetUInt32Value(UNIT_FIELD_FLAGS);
-                handler->PSendSysMessage(LANG_CURRENT_FACTION_PLAYER,chr->GetName(),factionid,flag);
-            }
-            return true;
-        }
-
-        uint32 factionid = atoi(pfactionid);
-        uint32 flag;
-
-        char *pflag = strtok(NULL, " ");
-        if (!pflag)
-            flag = chr->GetUInt32Value(UNIT_FIELD_FLAGS);
-        else
-            flag = atoi(pflag);
-
-        if (!sFactionTemplateStore.LookupEntry(factionid))
-        {
-            handler->PSendSysMessage(LANG_WRONG_FACTION, factionid);
-            handler->SetSentErrorMessage(true);
-            return false;
-        }
-
-        handler->PSendSysMessage(LANG_YOU_CHANGE_FACTION_PLAYER, chr->GetName(),factionid,flag);
-
-        chr->setFaction(factionid);
-        chr->SetUInt32Value(UNIT_FIELD_FLAGS,flag);
 
         return true;
     }
