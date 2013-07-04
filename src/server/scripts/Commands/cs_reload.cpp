@@ -41,8 +41,6 @@ EndScriptData */
 #include "WardenCheckMgr.h"
 #include "WaypointManager.h"
 
-#include "../Custom/sc_npc_teleport.h"
-
 class reload_commandscript : public CommandScript
 {
 public:
@@ -71,7 +69,7 @@ public:
             { "access_requirement",           SEC_ADMINISTRATOR, true,  &HandleReloadAccessRequirementCommand,          "", NULL },
             { "achievement_criteria_data",    SEC_ADMINISTRATOR, true,  &HandleReloadAchievementCriteriaDataCommand,    "", NULL },
             { "achievement_reward",           SEC_ADMINISTRATOR, true,  &HandleReloadAchievementRewardCommand,          "", NULL },
-            { "all",                          SEC_ADMINISTRATOR, true,  NULL,                          					"", reloadAllCommandTable },
+            { "all",                          SEC_ADMINISTRATOR, true,  NULL,                          "", reloadAllCommandTable },
             { "areatrigger_involvedrelation", SEC_ADMINISTRATOR, true,  &HandleReloadQuestAreaTriggersCommand,          "", NULL },
             { "areatrigger_tavern",           SEC_ADMINISTRATOR, true,  &HandleReloadAreaTriggerTavernCommand,          "", NULL },
             { "areatrigger_teleport",         SEC_ADMINISTRATOR, true,  &HandleReloadAreaTriggerTeleportCommand,        "", NULL },
@@ -83,7 +81,7 @@ public:
             { "creature_involvedrelation",    SEC_ADMINISTRATOR, true,  &HandleReloadCreatureQuestInvRelationsCommand,  "", NULL },
             { "creature_linked_respawn",      SEC_GAMEMASTER,    true,  &HandleReloadLinkedRespawnCommand,              "", NULL },
             { "creature_loot_template",       SEC_ADMINISTRATOR, true,  &HandleReloadLootTemplatesCreatureCommand,      "", NULL },
-            { "creature_onkill_reward",       SEC_ADMINISTRATOR, true,  &HandleReloadOnKillRewardCommand,           	"", NULL },
+            { "creature_onkill_reputation",   SEC_ADMINISTRATOR, true,  &HandleReloadOnKillReputationCommand,           "", NULL },
             { "creature_questrelation",       SEC_ADMINISTRATOR, true,  &HandleReloadCreatureQuestRelationsCommand,     "", NULL },
             { "creature_summon_groups",       SEC_ADMINISTRATOR, true,  &HandleReloadCreatureSummonGroupsCommand,       "", NULL },
             { "creature_template",            SEC_ADMINISTRATOR, true,  &HandleReloadCreatureTemplateCommand,           "", NULL },
@@ -156,7 +154,6 @@ public:
             { "waypoint_data",                SEC_ADMINISTRATOR, true,  &HandleReloadWpCommand,                         "", NULL },
             { "vehicle_accessory",            SEC_ADMINISTRATOR, true,  &HandleReloadVehicleAccessoryCommand,           "", NULL },
             { "vehicle_template_accessory",   SEC_ADMINISTRATOR, true,  &HandleReloadVehicleTemplateAccessoryCommand,   "", NULL },
-            { "npc_tele",                     SEC_ADMINISTRATOR, true,  &HandleReloadNPCTeleCommand,                    "", NULL },
             { NULL,                           0,                 false, NULL,                                           "", NULL }
         };
         static ChatCommand commandTable[] =
@@ -384,7 +381,7 @@ public:
         return true;
     }
 
-    static bool HandleReloadOnKillRewardCommand (ChatHandler* handler, const char* /*args*/)
+    static bool HandleReloadOnKillReputationCommand(ChatHandler* handler, const char* /*args*/)
     {
         TC_LOG_INFO(LOG_FILTER_GENERAL, "Re-Loading creature award reputation definitions...");
         sObjectMgr->LoadReputationOnKill();
@@ -1214,14 +1211,6 @@ public:
         sAccountMgr->LoadRBAC();
         sWorld->ReloadRBAC();
         handler->SendGlobalGMSysMessage("RBAC data reloaded.");
-        return true;
-    }
-	
-	static bool HandleReloadNPCTeleCommand(ChatHandler* handler, const char* /*args*/)
-	{
-        sLog->outInfo(LOG_FILTER_GENERAL, "Reloading NPC teleport tables...");
-        LoadNpcTele();
-        handler->SendGlobalGMSysMessage("NPC teleport tables reloaded.");
         return true;
     }
 };

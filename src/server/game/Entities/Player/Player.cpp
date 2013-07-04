@@ -7027,14 +7027,6 @@ void Player::RewardOnKill (Unit *victim, float rate)
     if (GetChampioningFaction())
     {
         // support for: Championing - http://www.wowwiki.com/Championing
-<<<<<<< HEAD
-        Map const* map = GetMap();
-        if (map && map->IsNonRaidDungeon())
-            if (LFGDungeonEntry const* dungeon = GetLFGDungeon(map->GetId(), map->GetDifficulty()))
-                if (dungeon->reclevel == 80)
-                    ChampioningFaction = GetChampioningFaction();
-=======
-
         // Note:
 
         // "All reputation gains while in dungeons will be applied to your standing with them."
@@ -7066,7 +7058,6 @@ void Player::RewardOnKill (Unit *victim, float rate)
             else
                 ChampioningFaction = GetChampioningFaction();
         }
->>>>>>> 7c6fcf96316490f3ed20d451f8f79d83121678d1
     }
 
     // Favored reputation increase START

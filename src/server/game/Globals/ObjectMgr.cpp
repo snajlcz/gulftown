@@ -6796,7 +6796,9 @@ void ObjectMgr::LoadReputationRewardRate()
 }
 
 void ObjectMgr::LoadRewardOnKill()
-{
+{	
+    uint32 oldMSTime = getMSTime();
+
     // For reload case
     _RewOnKill.clear();
 
@@ -6850,7 +6852,7 @@ void ObjectMgr::LoadRewardOnKill()
             FactionEntry const *factionEntry1 = sFactionStore.LookupEntry(rewOnKill.repfaction1);
             if (!factionEntry1)
             {
-                TC_LOG_ERROR(LOG_FILTER_SQL, "Faction (faction.dbc) %u does not exist but is used in `creature_onkill_reputation`", repOnKill.RepFaction1);
+                TC_LOG_ERROR(LOG_FILTER_SQL, "Faction (faction.dbc) %u does not exist but is used in `creature_onkill_reputation`", rewOnKill.repfaction1);
                 continue;
             }
         }
