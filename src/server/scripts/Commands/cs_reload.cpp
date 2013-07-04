@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License along
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
+/*
 /* ScriptData
 Name: reload_commandscript
 %Complete: 100
@@ -381,6 +381,7 @@ public:
         return true;
     }
 
+/* NOW DISABLED
     static bool HandleReloadOnKillReputationCommand(ChatHandler* handler, const char* /*args*/)
     {
         TC_LOG_INFO(LOG_FILTER_GENERAL, "Re-Loading creature award reputation definitions...");
@@ -388,7 +389,7 @@ public:
         handler->SendGlobalGMSysMessage("DB table `creature_onkill_reputation` reloaded.");
         return true;
     }
-
+*/
     static bool HandleReloadCreatureSummonGroupsCommand(ChatHandler* handler, const char* /*args*/)
     {
         TC_LOG_INFO(LOG_FILTER_GENERAL, "Reloading creature summon groups...");
@@ -1219,3 +1220,4 @@ void AddSC_reload_commandscript()
 {
     new reload_commandscript();
 }
+*/

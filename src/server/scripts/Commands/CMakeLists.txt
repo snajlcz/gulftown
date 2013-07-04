@@ -38,7 +38,7 @@ set(scripts_STAT_SRCS
   Commands/cs_npc.cpp
   Commands/cs_quest.cpp
   Commands/cs_rbac.cpp
-  Commands/cs_reload.cpp
+  #Commands/cs_reload.cpp
   Commands/cs_reset.cpp
   Commands/cs_tele.cpp
   Commands/cs_ticket.cpp
