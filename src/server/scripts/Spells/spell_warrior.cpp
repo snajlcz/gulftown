@@ -25,6 +25,7 @@
 #include "ScriptMgr.h"
 #include "SpellScript.h"
 #include "SpellAuraEffects.h"
+#include "Group.h"
 
 enum WarriorSpells
 {
@@ -41,7 +42,7 @@ enum WarriorSpells
     SPELL_WARRIOR_JUGGERNAUT_CRIT_BONUS_BUFF        = 65156,
     SPELL_WARRIOR_JUGGERNAUT_CRIT_BONUS_TALENT      = 64976,
     SPELL_WARRIOR_LAST_STAND_TRIGGERED              = 12976,
-    SPELL_WARRIOR_RALLYING_CRY                      = 97463,
+	SPELL_WARRIOR_RALLYING_CRY                      = 97463,
     SPELL_WARRIOR_SLAM                              = 50782,
     SPELL_WARRIOR_SWEEPING_STRIKES_EXTRA_ATTACK     = 26654,
     SPELL_WARRIOR_TAUNT                             = 355,
@@ -201,6 +202,7 @@ class spell_warr_concussion_blow : public SpellScriptLoader
 };
 
 /// Updated 4.3.4
+// 12834, 12848, 12867 - Deep Wounds R1, R2 & R3
 class spell_warr_deep_wounds : public SpellScriptLoader
 {
     public:
@@ -245,7 +247,7 @@ class spell_warr_deep_wounds : public SpellScriptLoader
 
             void Register()
             {
-                OnEffectHitTarget += SpellEffectFn(spell_warr_deep_wounds_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_DUMMY);
+                OnEffectHitTarget += SpellEffectFn(spell_warr_deep_wounds_SpellScript::HandleDummy, EFFECT_0, SPELL_EFFECT_APPLY_AURA);
             }
         };
 
@@ -433,47 +435,6 @@ class spell_warr_overpower : public SpellScriptLoader
         SpellScript* GetSpellScript() const
         {
             return new spell_warr_overpower_SpellScript();
-        }
-};
-
-// 97462 - Rallying Cry
-class spell_warr_rallying_cry : public SpellScriptLoader
-{
-    public:
-        spell_warr_rallying_cry() : SpellScriptLoader("spell_warr_rallying_cry") { }
-
-        class spell_warr_rallying_cry_SpellScript : public SpellScript
-        {
-            PrepareSpellScript(spell_warr_rallying_cry_SpellScript);
-
-            bool Validate(SpellInfo const* /*spellInfo*/)
-            {
-                if (!sSpellMgr->GetSpellInfo(SPELL_WARRIOR_RALLYING_CRY))
-                    return false;
-                return true;
-            }
-
-            bool Load()
-            {
-                return GetCaster()->GetTypeId() ==  TYPEID_PLAYER;
-            }
-
-            void HandleScript(SpellEffIndex /*effIndex*/)
-            {
-                int32 basePoints0 = int32(GetHitUnit()->CountPctFromMaxHealth(GetEffectValue()));
-
-                GetCaster()->CastCustomSpell(GetHitUnit(), SPELL_WARRIOR_RALLYING_CRY, &basePoints0, NULL, NULL, true);
-            }
-
-            void Register()
-            {
-                OnEffectHitTarget += SpellEffectFn(spell_warr_rallying_cry_SpellScript::HandleScript, EFFECT_0, SPELL_EFFECT_DUMMY);
-            }
-        };
-
-        SpellScript* GetSpellScript() const
-        {
-            return new spell_warr_rallying_cry_SpellScript();
         }
 };
 
@@ -766,6 +727,48 @@ class spell_warr_vigilance_trigger : public SpellScriptLoader
         }
 };
 
+
+// 97462 - Rallying Cry
+class spell_warr_rallying_cry : public SpellScriptLoader
+{
+    public:
+        spell_warr_rallying_cry() : SpellScriptLoader("spell_warr_rallying_cry") { }
+        
+        class spell_warr_rallying_cry_SpellScript : public SpellScript
+        {
+            PrepareSpellScript(spell_warr_rallying_cry_SpellScript);
+
+            bool Validate(SpellInfo const* /*spellInfo*/)
+            {
+                if (!sSpellMgr->GetSpellInfo(SPELL_WARRIOR_RALLYING_CRY))
+                    return false;
+                return true;
+            }
+
+            bool Load()
+            {
+                return GetCaster()->GetTypeId() ==  TYPEID_PLAYER;
+            }
+
+            void HandleScript(SpellEffIndex /*effIndex*/)
+            {
+                int32 healthModSpellBasePoints0 = int32(GetHitUnit()->CountPctFromMaxHealth(GetEffectValue()));
+
+                GetCaster()->CastCustomSpell(GetHitUnit(), SPELL_WARRIOR_RALLYING_CRY, &healthModSpellBasePoints0, NULL, NULL, true);
+            }
+
+            void Register()
+            {
+                OnEffectHitTarget += SpellEffectFn(spell_warr_rallying_cry_SpellScript::HandleScript, EFFECT_0, SPELL_EFFECT_DUMMY);
+            }
+        };
+
+        SpellScript* GetSpellScript() const
+        {
+            return new spell_warr_rallying_cry_SpellScript();
+        }
+};
+
 void AddSC_warrior_spell_scripts()
 {
     new spell_warr_bloodthirst();
@@ -779,7 +782,7 @@ void AddSC_warrior_spell_scripts()
     new spell_warr_last_stand();
     new spell_warr_overpower();
     new spell_warr_rallying_cry();
-    new spell_warr_rend();
+	new spell_warr_rend();
     new spell_warr_shattering_throw();
     new spell_warr_slam();
     new spell_warr_sweeping_strikes();
