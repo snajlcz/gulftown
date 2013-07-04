@@ -155,7 +155,7 @@ public:
                 switch (eventId)
                 {
                     case EVENT_QUAKE:
-                        DoCast(me->getVictim(), SPELL_QUAKE);
+                        DoCast(me->GetVictim(), SPELL_QUAKE);
                         events.RescheduleEvent(EVENT_QUAKE, 5000 + rand()%5000);
                         return;
                 }
@@ -258,9 +258,9 @@ public:
             if (_SpellBoreTimer <= Diff)
             {
                 if(!IsHeroic())
-                    DoCast(me->getVictim(),SPELL_ROCK_BORE);
+                    DoCast(me->GetVictim(),SPELL_ROCK_BORE);
                 if(IsHeroic())
-                    DoCast(me->getVictim(),H_SPELL_ROCK_BORE);
+                    DoCast(me->GetVictim(),H_SPELL_ROCK_BORE);
                 _SpellBoreTimer = 6000;
             }
             else
@@ -322,7 +322,7 @@ public:
                         events.RescheduleEvent(EVENT_MILL_FEAR, 10000);
                         return;
                     case EVENT_SHADOW_BOLT:
-                        DoCast(me->getVictim(), SPELL_SHADOW_BOLT);
+                        DoCast(me->GetVictim(), SPELL_SHADOW_BOLT);
                         events.RescheduleEvent(EVENT_SHADOWBOLT, 1000);
                         return;
                     case EVENT_FROSTBOLT_VOLLEY:

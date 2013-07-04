@@ -749,7 +749,7 @@ void AddCommandScripts()
     AddSC_npc_commandscript();
     AddSC_quest_commandscript();
     AddSC_rbac_commandscript();
-    AddSC_reload_commandscript();
+//    AddSC_reload_commandscript();
     AddSC_reset_commandscript();
     AddSC_server_commandscript();
     AddSC_tele_commandscript();
@@ -835,7 +835,7 @@ void AddEasternKingdomsScripts()
     AddSC_boss_chromaggus();
     AddSC_boss_nefarian();
     AddSC_instance_blackwing_lair();
-    AddSC_boss_victor_nefarius();
+//    AddSC_boss_victor_nefarius();
     AddSC_boss_mr_smite();
     AddSC_boss_omnotron_defense_system(); //Blackwing Descent
     AddSC_boss_bd_nefarian();
