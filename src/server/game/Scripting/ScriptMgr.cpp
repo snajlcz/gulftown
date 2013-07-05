@@ -1,9 +1,5 @@
 /*
- *
- * Copyright (C) 2011-2013 ArkCORE <http://www.arkania.net/>
- *
  * Copyright (C) 2008-2013 TrinityCore <http://www.trinitycore.org/>
- *
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -36,8 +32,6 @@
 #include "CreatureAI.h"
 #include "Player.h"
 #include "WorldPacket.h"
-
-#include "../Custom/sc_npc_teleport.h"
 
 // This is the global static registry of scripts.
 template<class TScript>
@@ -182,7 +176,6 @@ void ScriptMgr::Initialize()
     uint32 oldMSTime = getMSTime();
 
     LoadDatabase();
-    LoadNpcTele();
 
     TC_LOG_INFO(LOG_FILTER_SERVER_LOADING, "Loading C++ scripts");
 

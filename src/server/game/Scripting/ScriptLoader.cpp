@@ -756,7 +756,7 @@ void AddCommandScripts()
     AddSC_ticket_commandscript();
     AddSC_titles_commandscript();
     AddSC_wp_commandscript();
-    AddSC_GOMove_commandscript();
+//    AddSC_GOMove_commandscript();
 }
 
 void AddWorldScripts()
