@@ -1848,11 +1848,10 @@ void ObjectMgr::LoadGameobjects()
 
     //                                                0                1   2    3           4           5           6
     QueryResult result = WorldDatabase.Query("SELECT gameobject.guid, id, map, position_x, position_y, position_z, orientation, "
-    //   7          8          9          10         11             12            13     14         15         16          17          18
-        "rotation0, rotation1, rotation2, rotation3, spawntimesecs, animprogress, state, spawnMask, phaseMask, eventEntry, pool_entry, gameobject_addon.scale "
+    //   7          8          9          10         11             12            13     14         15         16          17
+        "rotation0, rotation1, rotation2, rotation3, spawntimesecs, animprogress, state, spawnMask, phaseMask, eventEntry, pool_entry "
         "FROM gameobject LEFT OUTER JOIN game_event_gameobject ON gameobject.guid = game_event_gameobject.guid "
-        "LEFT OUTER JOIN pool_gameobject ON gameobject.guid = pool_gameobject.guid "
-        "LEFT OUTER JOIN gameobject_addon ON gameobject.guid = gameobject_addon.guid");
+        "LEFT OUTER JOIN pool_gameobject ON gameobject.guid = pool_gameobject.guid");
 
     if (!result)
     {
@@ -1947,7 +1946,6 @@ void ObjectMgr::LoadGameobjects()
         data.phaseMask      = fields[15].GetUInt16();
         int16 gameEvent     = fields[16].GetInt8();
         uint32 PoolId        = fields[17].GetUInt32();
-        data.scale          = fields[18].GetFloat();
 
         if (data.rotation2 < -1.0f || data.rotation2 > 1.0f)
         {
