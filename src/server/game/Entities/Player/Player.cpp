@@ -3274,15 +3274,7 @@ void Player::InitStatsForLevel(bool reapplyMods)
     SetFloatValue(PLAYER_FIELD_MOD_HASTE, 1.0f);
     SetFloatValue(PLAYER_FIELD_MOD_RANGED_HASTE, 1.0f);
 
-    // reset size before reapply auras
-    QueryResult result = CharacterDatabase.PQuery("SELECT scale FROM characters_addon WHERE guid='%u'", m_uint32Values[OBJECT_FIELD_GUID]);
-    if(result)
-    {
-        float scale = (*result)[0].GetFloat();
-        SetObjectScale(scale);
-    }
-    else
-        SetObjectScale(1.0f);
+	SetObjectScale(1.0f);
 
     // save base values (bonuses already included in stored stats
     for (uint8 i = STAT_STRENGTH; i < MAX_STATS; ++i)
@@ -21696,30 +21688,20 @@ void Player::InitDisplayIds()
         return;
     }
 
-    QueryResult result = CharacterDatabase.PQuery("SELECT display FROM characters_addon WHERE display>'0' AND guid='%u'", m_uint32Values[OBJECT_FIELD_GUID]);
-    if(result)
+    uint8 gender = getGender();
+    switch (gender)
     {
-        uint32 display = (*result)[0].GetUInt32();
-        SetDisplayId(display);
-        SetNativeDisplayId(display);
-    }
-    else
-    {
-        uint8 gender = getGender();
-        switch (gender)
-        {
-            case GENDER_FEMALE:
-                SetDisplayId(info->displayId_f);
-                SetNativeDisplayId(info->displayId_f);
-                break;
-            case GENDER_MALE:
-                SetDisplayId(info->displayId_m);
-                SetNativeDisplayId(info->displayId_m);
-                break;
-            default:
-                sLog->outError(LOG_FILTER_PLAYER, "Invalid gender %u for player", gender);
-                return;
-        }
+        case GENDER_FEMALE:
+            SetDisplayId(info->displayId_f);
+            SetNativeDisplayId(info->displayId_f);
+            break;
+        case GENDER_MALE:
+            SetDisplayId(info->displayId_m);
+            SetNativeDisplayId(info->displayId_m);
+            break;
+        default:
+            TC_LOG_ERROR(LOG_FILTER_PLAYER, "Invalid gender %u for player", gender);
+            return;
     }
 }
 
