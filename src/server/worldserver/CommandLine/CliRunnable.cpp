@@ -1,7 +1,4 @@
 /*
- *
- * Copyright (C) 2011-2013 ArkCORE <http://www.arkania.net/>
- *
  * Copyright (C) 2008-2013 TrinityCore <http://www.trinitycore.org/>
  *
  * Copyright (C) 2005-2009 MaNGOS <http://getmangos.com/>
@@ -116,7 +113,7 @@ void utf8print(void* /*arg*/, const char* str)
 
 void commandFinished(void*, bool /*success*/)
 {
-    printf("ArkCORE> ");
+    printf("Gulftown> ");
     fflush(stdout);
 }
 
@@ -150,7 +147,7 @@ void CliRunnable::run()
 
     // print this here the first time
     // later it will be printed after command queue updates
-    printf("ArkCORE>");
+    printf("Gulftown>");
 
     ///- As long as the World is running (no World::m_stopEvent), get the command line and handle it
     while (!World::IsStopped())
@@ -163,7 +160,7 @@ void CliRunnable::run()
         char commandbuf[256];
         command_str = fgets(commandbuf, sizeof(commandbuf), stdin);
 #else
-        command_str = readline("ArkCORE>");
+        command_str = readline("Gulftown>");
         rl_bind_key('\t', rl_complete);
 #endif
 
@@ -179,7 +176,7 @@ void CliRunnable::run()
             if (!*command_str)
             {
 #if PLATFORM == PLATFORM_WINDOWS
-                printf("ArkCORE>");
+                printf("Gulftown>");
 #endif
                 continue;
             }
@@ -188,7 +185,7 @@ void CliRunnable::run()
             if (!consoleToUtf8(command_str, command))         // convert from console encoding to utf8
             {
 #if PLATFORM == PLATFORM_WINDOWS
-                printf("ArkCORE>");
+                printf("Gulftown>");
 #endif
                 continue;
             }
