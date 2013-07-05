@@ -80,7 +80,7 @@ void AddSC_tele_commandscript();
 void AddSC_ticket_commandscript();
 void AddSC_titles_commandscript();
 void AddSC_wp_commandscript();
-void AddSC_GOMove_commandscript();
+//void AddSC_GOMove_commandscript();
 
 #ifdef SCRIPTS
 //world
@@ -1380,7 +1380,7 @@ void AddBattlegroundScripts()
 
 #ifdef SCRIPTS
 /* This is where custom scripts' loading functions should be declared. */
-    void AddSC_npc_teleport();
+    //void AddSC_npc_teleport();
 
 #endif
 
@@ -1388,8 +1388,8 @@ void AddCustomScripts()
 {
 #ifdef SCRIPTS
     /* This is where custom scripts should be added. */
-    AddSC_npc_teleport();
-    void AddSC_GOMove_commandscript();
+   // AddSC_npc_teleport();
+    //void AddSC_GOMove_commandscript();
 
 #endif
 }
