@@ -6785,7 +6785,7 @@ void ObjectMgr::LoadRewardOnKill()
 
     if (!result)
     {
-        TC_LOG_ERROR(LOG_FILTER_SERVER_LOADING, ">> Loaded 0 creature award reputation definitions. DB table `creature_onkill_reputation` is empty.");
+        TC_LOG_ERROR(LOG_FILTER_SERVER_LOADING, ">> Loaded 0 creature award reputation definitions. DB table `creature_onkill_reward` is empty.");
         return;
     }
 
@@ -6814,7 +6814,7 @@ void ObjectMgr::LoadRewardOnKill()
 
         if (!GetCreatureTemplate(creature_id))
         {
-            TC_LOG_ERROR(LOG_FILTER_SQL, "Table `creature_onkill_reputation` have data for not existed creature entry (%u), skipped", creature_id);
+            TC_LOG_ERROR(LOG_FILTER_SQL, "Table `creature_onkill_reward` have data for not existed creature entry (%u), skipped", creature_id);
             continue;
         }
 
@@ -6823,7 +6823,7 @@ void ObjectMgr::LoadRewardOnKill()
             FactionEntry const *factionEntry1 = sFactionStore.LookupEntry(rewOnKill.repfaction1);
             if (!factionEntry1)
             {
-                TC_LOG_ERROR(LOG_FILTER_SQL, "Faction (faction.dbc) %u does not exist but is used in `creature_onkill_reputation`", rewOnKill.repfaction1);
+                TC_LOG_ERROR(LOG_FILTER_SQL, "Faction (faction.dbc) %u does not exist but is used in `creature_onkill_reward`", rewOnKill.repfaction1);
                 continue;
             }
         }
