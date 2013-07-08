@@ -384,8 +384,8 @@ public:
     static bool HandleReloadOnKillReputationCommand(ChatHandler* handler, const char* /*args*/)
     {
         TC_LOG_INFO(LOG_FILTER_GENERAL, "Re-Loading creature award reputation definitions...");
-        sObjectMgr->LoadReputationOnKill();
-        handler->SendGlobalGMSysMessage("DB table `creature_onkill_reputation` reloaded.");
+        sObjectMgr->LoadRewardOnKill();
+        handler->SendGlobalGMSysMessage("DB table `creature_onkill_reward` reloaded.");
         return true;
     }
 
